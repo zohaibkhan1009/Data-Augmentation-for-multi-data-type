@@ -1,0 +1,37 @@
+import pandas as pd
+import numpy as np
+
+# Load your original dataset
+data = pd.read_csv(r'C:\Users\zohaib khan\OneDrive\Desktop\USE ME\dump\zk\weight_change.csv')
+
+# Print column names to verify the target column name
+print("Columns in the dataset:", data.columns)
+
+# Define the number of augmented records to create
+num_augmented = 5000  # Changed from 1000 to 5000
+
+# Attempt to identify the target label column name
+target_column = 'Class' if 'Class' in data.columns else data.columns[-1]  # Default to last column if 'Class' not found
+
+# Function to apply slight random variation to numeric features
+def augment_data(record, variation=0.05):
+    augmented_record = record.copy()
+    for col in record.index[:-1]:  # Exclude the target column
+        if pd.api.types.is_numeric_dtype(record[col]):  # Only augment numeric columns
+            # Add a random variation within 5% of the original value
+            try:
+                augmented_record[col] = record[col] * (1 + np.random.uniform(-variation, variation))
+            except TypeError:
+                pass  # Skip non-numeric data
+    return augmented_record
+
+# Generate augmented data
+augmented_data = pd.DataFrame([augment_data(data.iloc[i % len(data)]) for i in range(num_augmented)])
+
+# Retain the target column value for each augmented record from the original dataset
+augmented_data[target_column] = [data.iloc[i % len(data)][target_column] for i in range(num_augmented)]
+
+# Save the augmented dataset to a new CSV file in the same directory
+augmented_data.to_csv(r'C:\Users\zohaib khan\OneDrive\Desktop\USE ME\dump\zk\augmented_weight_change.csv', index=False)
+
+print("Augmented dataset saved as 'augmented_weight_change.csv' in the specified directory.")
